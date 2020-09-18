@@ -335,8 +335,8 @@ async function transcribe_witai(file) {
         console.log('transcribe_witai')
         const extractSpeechIntent = util.promisify(witClient.extractSpeechIntent);
         var stream = fs.createReadStream(file);
-        const output = await extractSpeechIntent(witAPIKEY, stream, "audio/wav")
         witAI_lastcallTS = Math.floor(new Date());
+        const output = await extractSpeechIntent(witAPIKEY, stream, "audio/wav")
         console.log(output)
         stream.destroy()
         if (output && '_text' in output && output._text.length)

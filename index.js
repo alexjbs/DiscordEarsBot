@@ -15,6 +15,34 @@ console.log = function () {
 const fs = require('fs');
 const util = require('util');
 const path = require('path');
+//////////////////////////////////////////
+//////////////// CONFIG //////////////////
+//////////////////////////////////////////
+
+const SETTINGS_FILE = 'settings.json';
+
+let DISCORD_TOK = null;
+let witAPIKEY = null; 
+let SPOTIFY_TOKEN_ID = null;
+let SPOTIFY_TOKEN_SECRET = null;
+
+function loadConfig() {
+    try {
+        const CFG_DATA = JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8'));
+
+        DISCORD_TOK = CFG_DATA.discord_token;
+        witAPIKEY = CFG_DATA.wit_ai_token;
+        console.log('Config loaded!')
+    } catch (e) {
+        console.log('loadConfig: ' + e)
+    }
+}
+loadConfig()
+//////////////////////////////////////////
+//////////////////////////////////////////
+//////////////////////////////////////////
+
+
 
 //////////////////////////////////////////
 ///////////////// VARIA //////////////////
@@ -87,29 +115,6 @@ async function convert_audio(infile, outfile, cb) {
         console.log('convert_audio: ' + e)
     }
 }
-//////////////////////////////////////////
-//////////////////////////////////////////
-//////////////////////////////////////////
-
-
-//////////////////////////////////////////
-//////////////// CONFIG //////////////////
-//////////////////////////////////////////
-
-const SETTINGS_FILE = 'settings.json';
-
-let DISCORD_TOK = null;
-let witAPIKEY = null; 
-let SPOTIFY_TOKEN_ID = null;
-let SPOTIFY_TOKEN_SECRET = null;
-
-function loadConfig() {
-    const CFG_DATA = JSON.parse( fs.readFileSync(SETTINGS_FILE, 'utf8') );
-    
-    DISCORD_TOK = CFG_DATA.discord_token;
-    witAPIKEY = CFG_DATA.wit_ai_token;
-}
-loadConfig()
 //////////////////////////////////////////
 //////////////////////////////////////////
 //////////////////////////////////////////

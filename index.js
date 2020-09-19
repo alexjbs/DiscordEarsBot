@@ -149,6 +149,7 @@ discordClient.on('message', async (msg) => {
         if (val.musicYTStream) val.musicYTStream.destroy()
         guildMap.delete(mapKey)
         msg.reply('Disconnected.')
+        console.log('Disconnected from voice channel ' + msg.member.voice.channelID)
       } else {
         msg.reply('Cannot leave because not connected.')
       }

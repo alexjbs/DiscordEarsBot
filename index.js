@@ -35,7 +35,8 @@ function loadConfig () {
   } catch (e) {
     console.log('loadConfig: ' + e)
     //return e
-    process.kill(process.pid, 'SIGTERM')
+    //process.kill(process.pid, 'SIGTERM')
+    process.exit(0)
   }
 }
 loadConfig()

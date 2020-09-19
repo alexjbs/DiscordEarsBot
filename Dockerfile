@@ -11,7 +11,8 @@ RUN apt -y install curl dirmngr apt-transport-https lsb-release ca-certificates
 RUN curl -sL https://deb.nodesource.com/setup_12.x | bash -
 RUN apt -y install nodejs
 
-RUN git clone https://github.com/healzer/DiscordEarsBot.git .
+RUN git clone https://github.com/alexjbs/DiscordEarsBot.git .
+RUN git checkout staging
 
 COPY settings.json /var/www/DiscordEarsBot/settings.json
 

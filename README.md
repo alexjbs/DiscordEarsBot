@@ -26,7 +26,7 @@ If you prefer using Docker instead of manually installing it:
 You need nodeJS version 12+ with npm on your machine.
 ```
 sudo apt-get install -y sox screen
-git clone https://github.com/healzer/DiscordEarsBot.git
+git clone https://github.com/alexjbs/DiscordEarsBot.git
 cd DiscordEarsBot
 npm install
 ```
@@ -43,7 +43,7 @@ You may need to manually add sox to your environment variables, here's a tutoria
 
 Using shell or command prompt execute the following:
 ```
-git clone https://github.com/healzer/DiscordEarsBot.git
+git clone https://github.com/alexjbs/DiscordEarsBot.git
 cd DiscordEarsBot
 npm install
 ```

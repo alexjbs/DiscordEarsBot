@@ -225,7 +225,7 @@ async function connect (msg, mapKey) {
 
 function speakImpl (voiceConnection, mapKey) {
   voiceConnection.on('speaking', async (user, speaking) => {
-    if (speaking.bitfield === 0 /*|| user.bot*/) { // ToDo: Add user.username.tag === Craig.1289||Giarc.0116      
+    if (speaking.bitfield === 0 /*|| user.bot*/) { // ToDo: Add user.username.tag === Craig.1289||Giarc.0116
       return
     }
     console.log(`I'm listening to ${user.username}`)

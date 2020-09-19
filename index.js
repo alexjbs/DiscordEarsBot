@@ -34,9 +34,12 @@ function loadConfig () {
     console.log('Config loaded!')
   } catch (e) {
     console.log('loadConfig: ' + e)
+    //return e
+    process.kill(process.pid, 'SIGTERM')
   }
 }
 loadConfig()
+
 //////////////////////////////////////////
 //////////////////////////////////////////
 //////////////////////////////////////////

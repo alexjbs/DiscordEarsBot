@@ -268,6 +268,10 @@ function speakImpl (voiceConnection, mapKey) {
                 fs.unlinkSync(infile)
                 fs.unlinkSync(outfile)
               }
+            }).catch((error) => { // try to hadle "UnhandledPromiseRejectionWarning:
+              // TypeError: Cannot read property 'text_Channel' of undefined"
+              console.log('convertAudio error occured!')
+              console.error(error)
             })
           } catch (e) {
             console.log('tmpraw rename: ' + e)
@@ -284,8 +288,12 @@ function speakImpl (voiceConnection, mapKey) {
 
 function processCommandsQuery (txt, mapKey, user) {
   if (txt && txt.length) {
-    const val = guildMap.get(mapKey)
-    val.textChannel.send(user.username + ': ' + txt)
+    try {
+      const val = guildMap.get(mapKey)
+      val.textChannel.send(user.username + ': ' + txt)
+    } catch (e) {
+      console.log('processCommandsQuery 837:' + e)
+    }
   }
 }
 

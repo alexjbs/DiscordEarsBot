@@ -34,8 +34,6 @@ function loadConfig () {
     console.log('Config loaded!')
   } catch (e) {
     console.log('loadConfig: ' + e)
-    //return e
-    //process.kill(process.pid, 'SIGTERM')
     process.exit(0)
   }
 }
@@ -151,7 +149,7 @@ discordClient.on('message', async (msg) => {
         if (val.voiceChannel) val.voiceChannel.leave()
         if (val.voiceConnection) val.voiceConnection.disconnect()
         if (val.musicYTStream) val.musicYTStream.destroy()
-        guildMap.delete(mapKey)
+        guildMap.delete(mapKey) // ToDo: Wait last witai reply, send text to channel then disconnect.
         msg.reply('Disconnected.')
         console.log('Disconnected from voice channel ' + msg.member.voice.channelID)
       } else {
@@ -227,7 +225,7 @@ async function connect (msg, mapKey) {
 
 function speakImpl (voiceConnection, mapKey) {
   voiceConnection.on('speaking', async (user, speaking) => {
-    if (speaking.bitfield === 0 /*|| user.bot*/) {
+    if (speaking.bitfield === 0 /*|| user.bot*/) { // ToDo: Add user.username.tag === Craig.1289||Giarc.0116      
       return
     }
     console.log(`I'm listening to ${user.username}`)

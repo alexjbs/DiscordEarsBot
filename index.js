@@ -151,7 +151,7 @@ discordClient.on('message', async (msg) => {
         if (val.musicYTStream) val.musicYTStream.destroy()
         guildMap.delete(mapKey) // ToDo: Wait last witai reply, send text to channel then disconnect.
         msg.reply('Disconnected.')
-        console.log('Disconnected from voice channel ' + msg.member.voice.channelID)
+        console.log('Disconnected from voice channel: ' + msg.member.voice.channel.name)
       } else {
         msg.reply('Cannot leave because not connected.')
       }
@@ -215,7 +215,7 @@ async function connect (msg, mapKey) {
       guildMap.delete(mapKey)
     })
     msg.reply('connected!')
-    console.log('Connected to voice channel ' + msg.member.voice.channelID)
+    console.log('Connected to voice channel: ' + msg.member.voice.channel.name)
   } catch (e) {
     console.log('connect: ' + e)
     msg.reply('Error: unable to join your voice channel.')

@@ -213,6 +213,7 @@ async function connect (msg, mapKey) {
       guildMap.delete(mapKey)
     })
     msg.reply('connected!')
+    console.log('Connected to voice channel ' + msg.member.voice.channelID)
   } catch (e) {
     console.log('connect: ' + e)
     msg.reply('Error: unable to join your voice channel.')

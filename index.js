@@ -16,6 +16,7 @@ console.log = function () {
 const fs = require('fs')
 const util = require('util')
 const path = require('path')
+
 //////////////////////////////////////////
 //////////////// CONFIG //////////////////
 //////////////////////////////////////////
@@ -146,14 +147,9 @@ discordClient.on('message', async (msg) => {
     } else if (msg.content.trim().toLowerCase() === _CMD_LEAVE) {
       if (guildMap.has(mapKey)) {
         const val = guildMap.get(mapKey)
-        console.log('voiceConnection status before voiceChannel.leave(): ' + val.voiceConnection.status)
         if (val.voiceChannel) val.voiceChannel.leave()
-        console.log('voiceConnection status before disconnect: ' + val.voiceConnection.status)
-        if (val.voiceConnection) val.voiceConnection.disconnect()
-        console.log('voiceConnection status after disconnect: ' + val.voiceConnection.status)
-        if (val.musicYTStream) val.musicYTStream.destroy() // ToDo: "Clean" unused items
-        console.log('mapKey beig deleted from CMD_LEAVE')
-        guildMap.delete(mapKey) // ToDo: Wait last witai reply, send text to channel then disconnect.
+        if (val.voiceConnection.status !== 4) val.voiceConnection.disconnect() // Only try to disconnect if not aleady disconnected
+        guildMap.delete(mapKey) // ToDo: Wait last witai reply, send text to channel then clear the key.
         msg.reply('Disconnected.')
         console.log('Disconnected from voice channel: ' + msg.member.voice.channel.name)
       } else {
@@ -162,9 +158,13 @@ discordClient.on('message', async (msg) => {
     } else if (msg.content.trim().toLowerCase() === _CMD_HELP) {
       msg.reply(getHelpString())
     } else if (msg.content.trim().toLowerCase() === _CMD_DEBUG) {
-      const val = guildMap.get(mapKey)
-      if (val.debug) { val.debug = false } else { val.debug = true }
-      console.log('Toggled debug mode ' + (val.debug ? 'ON' : 'OFF'))
+      if (guildMap.has(mapKey)) {
+        const val = guildMap.get(mapKey)
+        if (val.debug) { val.debug = false } else { val.debug = true }
+        console.log('Toggled debug mode ' + (val.debug ? 'ON' : 'OFF'))
+      } else {
+        msg.reply('Cannot toggle debug because not connected.') // Maybe should remove debug dependency from connection
+      }
     } else if (msg.content.trim().toLowerCase() === _CMD_TEST) {
       msg.reply('hello back =)')
     }
@@ -201,25 +201,16 @@ async function connect (msg, mapKey) {
     const textChannel = await discordClient.channels.fetch(msg.channel.id)
     if (!textChannel) return msg.reply('Error: The text channel does not exist!')
     const voiceConnection = await voiceChannel.join()
-    //console.log('voiceConnection Connected! status: ' + voiceConnection.status)
     voiceConnection.play(new Silence(), { type: 'opus' })
-    guildMap.set(mapKey, { // ToDo: "Clean" unused items
+    guildMap.set(mapKey, {
       textChannel: textChannel,
       voiceChannel: voiceChannel,
       voiceConnection: voiceConnection,
-      musicQueue: [],
-      musicDispatcher: null,
-      musicYTStream: null,
-      currentPlayingTitle: null,
-      currentPlayingQuery: null,
       debug: false
     })
     speakImpl(voiceConnection, mapKey)
-    console.log('speakImpl | voiceConnection status before disconnect: ' + voiceConnection.status)
     voiceConnection.on('disconnect', async (e) => {
       if (e) console.log(e)
-      console.log('speakImpl | voiceConnection status after disconnect: ' + voiceConnection.status)
-      console.log('mapKey being deleted by voiceConnection disconnected from ' + voiceConnection.channel.name)
       guildMap.delete(mapKey)
     })
     msg.reply('connected!')
@@ -304,7 +295,7 @@ function processCommandsQuery (txt, mapKey, user) {
       const val = guildMap.get(mapKey)
       val.textChannel.send(user.username + ': ' + txt)
     } catch (e) {
-      console.log('processCommandsQuery 837:' + e)
+      console.log('processCommandsQuery 307:' + e)
     }
   }
 }

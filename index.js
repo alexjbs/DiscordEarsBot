@@ -148,8 +148,8 @@ discordClient.on('message', async (msg) => {
       if (guildMap.has(mapKey)) {
         const val = guildMap.get(mapKey)
         if (val.voiceChannel) val.voiceChannel.leave()
-        if (val.voiceConnection.status !== 4) val.voiceConnection.disconnect() // Only try to disconnect if not aleady disconnected
-        guildMap.delete(mapKey) // ToDo: Wait last witai reply, send text to channel then clear the key.
+        if (val.voiceConnection.status !== 4) val.voiceConnection.disconnect() // Only try to disconnect if not already disconnected
+        guildMap.delete(mapKey) // ToDo: Wait last WitAi reply, send text to channel then clear the key.
         msg.reply('Disconnected.')
         console.log('Disconnected from voice channel: ' + msg.member.voice.channel.name)
       } else {
@@ -249,7 +249,7 @@ function speakImpl (voiceConnection, mapKey) {
       console.log('duration: ' + duration)
 
       if (duration < 0.5 || duration > 19) {
-        console.log('TOO SHORT / TOO LONG; SKPPING')
+        console.log('TOO SHORT / TOO LONG; SKIPPING')
         fs.unlinkSync(filename)
         return
       }
@@ -271,9 +271,9 @@ function speakImpl (voiceConnection, mapKey) {
                 fs.unlinkSync(infile)
                 fs.unlinkSync(outfile)
               }
-            }).catch((error) => { // try to hadle "UnhandledPromiseRejectionWarning:
+            }).catch((error) => { // try to handle "UnhandledPromiseRejectionWarning:
               // TypeError: Cannot read property 'text_Channel' of undefined"
-              console.log('convertAudio error occured!')
+              console.log('convertAudio error occurred!')
               console.error(error)
             })
           } catch (e) {

@@ -78,12 +78,13 @@ function sleep (ms) {
   })
 }
 
-async function convertAudio (infile, outfile, cb) {
+async function convertAudio (infile, outfile, trim, cb) {
   try {
     const SoxCommand = require('sox-audio')
     const command = SoxCommand()
     const streamin = fs.createReadStream(infile)
-    const streamout = fs.createWriteStream(outfile)
+    // const streamout = fs.createWriteStream(outfile)
+    const streamout = outfile
     command.input(streamin)
       .inputSampleRate(48000)
       .inputEncoding('signed')
@@ -97,8 +98,18 @@ async function convertAudio (infile, outfile, cb) {
       .outputChannels(1)
       .outputFileType('wav')
 
+    if (trim) { // splits audio in segments of 19 seconds
+      command.trim(0, 19)
+        .addEffect('newfile')
+        .addEffect('restart')
+    }
+
+    command.on('start', function (commandLine) {
+      console.log('Spawned sox with command ' + commandLine)
+    })
+
     command.on('end', function () {
-      streamout.close()
+      // streamout.close()
       streamin.close()
       cb()
     })
@@ -206,7 +217,8 @@ async function connect (msg, mapKey) {
       textChannel: textChannel,
       voiceChannel: voiceChannel,
       voiceConnection: voiceConnection,
-      debug: false
+      //debug: false
+      debug: true
     })
     speakImpl(voiceConnection, mapKey)
     voiceConnection.on('disconnect', async (e) => {
@@ -243,12 +255,13 @@ function speakImpl (voiceConnection, mapKey) {
       console.log('ws error: ' + e)
     })
     audioStream.on('end', async () => {
+      let trim = false
       const stats = fs.statSync(filename)
       const fileSizeInBytes = stats.size
       const duration = fileSizeInBytes / 48000 / 4
       console.log('duration: ' + duration)
 
-      if (duration < 0.5 || duration > 19) {
+      if (duration < 0.5 || duration > 120) {
         console.log('TOO SHORT / TOO LONG; SKIPPING')
         fs.unlinkSync(filename)
         return
@@ -262,14 +275,54 @@ function speakImpl (voiceConnection, mapKey) {
         } else {
           const val = guildMap.get(mapKey)
           const infile = newfilename
-          const outfile = newfilename + '.wav'
+          let outfile = newfilename + '.wav'
           try {
-            convertAudio(infile, outfile, async () => {
-              const out = await transcribeWitai(outfile)
-              if (out != null) { processCommandsQuery(out, mapKey, user) }
-              if (!val.debug) {
-                fs.unlinkSync(infile)
-                fs.unlinkSync(outfile)
+            if (duration > 19) { // For now, we just slice the audio in 19s segments
+              trim = true
+              // outfile = newfilename + '_%2n.wav'
+              outfile = `${newfilename}_%2n.wav`
+            }
+            convertAudio(infile, outfile, trim, async () => {
+              //if (!val.debug) fs.unlinkSync(infile)
+              if (!trim) {
+                const out = await transcribeWitai(outfile)
+                if (out != null) { processCommandsQuery(out, mapKey, user) }
+                if (!val.debug) {
+                  fs.unlinkSync(infile)
+                  fs.unlinkSync(outfile)
+                }
+              } else {
+                const promises = [] // ToDo: Confirm if this needs to be moved up.
+                try {
+                  let oldSuffix = '_%2n.'
+                  for (let i = 0; i < Math.ceil(duration / 19); i++) {
+                    const suffix = '_' + (i + 1).toString().padStart(2, '0') + '.'
+                    outfile = outfile.replace(oldSuffix, suffix)
+                    oldSuffix = suffix
+                    console.log('Starting to transcript file ' + outfile)
+                    promises.push(transcribeWitai(outfile))
+                    await sleep(1100)
+                  }
+                  if (!val.debug) {
+                    fs.unlinkSync(infile)
+                    //fs.unlinkSync(outfile)
+                  }
+                } catch (error) {
+                  console.error('Error: push(transcribeWitai(' + outfile + ') ' + error)
+                }
+                Promise.all(promises)
+                  .then(async () => {
+                    for (const item of promises) {
+                      await item.then((out) => {
+                        if (out != null) { processCommandsQuery(out, mapKey, user) }
+                        if (!val.debug) fs.unlinkSync(outfile) // ToDo: fix outfile ref.
+                      })
+                    }
+                  }).catch((err) => { // try to handle "UnhandledPromiseRejectionWarning:
+                    // TypeError: Cannot read property 'text_Channel' of undefined"
+                    console.log('Promise convertAudio error occurred!')
+                    console.error(err)
+                  })
               }
             }).catch((error) => { // try to handle "UnhandledPromiseRejectionWarning:
               // TypeError: Cannot read property 'text_Channel' of undefined"

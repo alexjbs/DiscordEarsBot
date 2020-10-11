@@ -84,14 +84,14 @@ async function convertAudio (infile, outfile, trim, cb) {
     const command = SoxCommand()
     const streamin = fs.createReadStream(infile)
     // const streamout = fs.createWriteStream(outfile)
-    const streamout = outfile
+    // streamout = outfile
     command.input(streamin)
       .inputSampleRate(48000)
       .inputEncoding('signed')
       .inputBits(16)
       .inputChannels(2)
       .inputFileType('raw')
-      .output(streamout)
+      .output(outfile)
       .outputSampleRate(16000)
       .outputEncoding('signed')
       .outputBits(16)
@@ -104,9 +104,9 @@ async function convertAudio (infile, outfile, trim, cb) {
         .addEffect('restart')
     }
 
-    command.on('start', function (commandLine) {
+    /* command.on('start', function (commandLine) {
       console.log('Spawned sox with command ' + commandLine)
-    })
+    }) */
 
     command.on('end', function () {
       // streamout.close()
@@ -217,8 +217,7 @@ async function connect (msg, mapKey) {
       textChannel: textChannel,
       voiceChannel: voiceChannel,
       voiceConnection: voiceConnection,
-      //debug: false
-      debug: true
+      debug: false
     })
     speakImpl(voiceConnection, mapKey)
     voiceConnection.on('disconnect', async (e) => {
@@ -279,11 +278,9 @@ function speakImpl (voiceConnection, mapKey) {
           try {
             if (duration > 19) { // For now, we just slice the audio in 19s segments
               trim = true
-              // outfile = newfilename + '_%2n.wav'
               outfile = `${newfilename}_%2n.wav`
             }
             convertAudio(infile, outfile, trim, async () => {
-              //if (!val.debug) fs.unlinkSync(infile)
               if (!trim) {
                 const out = await transcribeWitai(outfile)
                 if (out != null) { processCommandsQuery(out, mapKey, user) }
@@ -296,11 +293,13 @@ function speakImpl (voiceConnection, mapKey) {
                 try {
                   let oldSuffix = '_%2n.'
                   for (let i = 0; i < Math.ceil(duration / 19); i++) {
-                    const suffix = '_' + (i + 1).toString().padStart(2, '0') + '.'
+                    //const suffix = '_' + (i + 1).toString().padStart(2, '0') + '.'
+                    const suffix = `_${(i + 1).toString().padStart(2, '0')}.` // Maybe keep line above for readability
                     outfile = outfile.replace(oldSuffix, suffix)
                     oldSuffix = suffix
                     console.log('Starting to transcript file ' + outfile)
-                    promises.push(transcribeWitai(outfile))
+                    const dataPair = [transcribeWitai(outfile), outfile]
+                    promises.push(dataPair)
                     await sleep(1100)
                   }
                   if (!val.debug) {
@@ -313,9 +312,10 @@ function speakImpl (voiceConnection, mapKey) {
                 Promise.all(promises)
                   .then(async () => {
                     for (const item of promises) {
-                      await item.then((out) => {
+                      await item[0].then((out) => {
+                        console.log('Promise outfile: ' + item[1])
                         if (out != null) { processCommandsQuery(out, mapKey, user) }
-                        if (!val.debug) fs.unlinkSync(outfile) // ToDo: fix outfile ref.
+                        if (!val.debug) fs.unlinkSync(item[1]) // delete outfile
                       })
                     }
                   }).catch((err) => { // try to handle "UnhandledPromiseRejectionWarning:

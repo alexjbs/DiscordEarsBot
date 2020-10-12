@@ -297,14 +297,13 @@ function speakImpl (voiceConnection, mapKey) {
                     const suffix = `_${(i + 1).toString().padStart(2, '0')}.` // Maybe keep line above for readability
                     outfile = outfile.replace(oldSuffix, suffix)
                     oldSuffix = suffix
-                    console.log('Starting to transcript file ' + outfile)
+                    if (val.debug) console.log('Starting to transcript file ' + outfile)
                     const dataPair = [transcribeWitai(outfile), outfile]
                     promises.push(dataPair)
                     await sleep(1100)
                   }
                   if (!val.debug) {
                     fs.unlinkSync(infile)
-                    //fs.unlinkSync(outfile)
                   }
                 } catch (error) {
                   console.error('Error: push(transcribeWitai(' + outfile + ') ' + error)
@@ -313,7 +312,6 @@ function speakImpl (voiceConnection, mapKey) {
                   .then(async () => {
                     for (const item of promises) {
                       await item[0].then((out) => {
-                        console.log('Promise outfile: ' + item[1])
                         if (out != null) { processCommandsQuery(out, mapKey, user) }
                         if (!val.debug) fs.unlinkSync(item[1]) // delete outfile
                       })
@@ -379,7 +377,7 @@ async function transcribeWitai (file) {
     var stream = fs.createReadStream(file)
     witAiLastCallTS = Math.floor(new Date())
     const output = await extractSpeechIntent(witAPIKEY, stream, 'audio/wav')
-    console.log(output)
+    // console.log(output)
     stream.destroy()
     if (output && '_text' in output && output._text.length) { return output._text }
     if (output && 'text' in output && output.text.length) { return output.text }
